@@ -1,0 +1,87 @@
+﻿@page "/empleados"
+@using BlazorCrud.Shared;
+@using CurrieTechnologies.Razor.SweetAlert2;
+@using BlazorCrud.Client.Services;
+
+@inject SweetAlertService Swal;
+@inject IEmpleadoService empSer;
+
+<h3>Empleados</h3>
+
+
+<a class="btn btn-outline-success btn-sm mb-3" href="newEmp">Nuevo Empleado</a>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Nombre </th>
+            <th>Departamento</th>
+            <th>Sueldo</th>
+            <th>Fecha Contrato</th>
+            <th></th>
+        </tr>
+     </thead>
+     <tbody>
+            @if(emp == null)
+            {
+                <tr>
+                    <td colspan="5" align="center">
+                        <img style="width: 50px" src="https://media.tenor.com/On7kvXhzml4AAAAj/loading-gif.gif"/>
+                    </td>
+                </tr>
+            }
+            else
+            {
+                @foreach(var i in emp)
+                {
+                <tr>
+                    <td>@i.NombreCompleto</td>
+                    <td>@i.Departamento?.Nombre</td>
+                    <td>@i.Sueldo</td>
+                    <td>@i.FechaContrato.ToString("dd/MM/yyyy")</td>
+                    <td>
+                        <a class="btn btn-outline-primary btn-sm" href="newEmp/@i.IdEmpleado">Edit</a>
+                    </td>
+                    <button type="button" class="btn btn-outline-danger btn-sm ms-2" @onclick="(()=> delete(i.IdEmpleado))">Delete</button>
+                </tr>
+                }
+            }
+        </tbody>
+</table>
+
+@code {
+    List<EmpleadoDTO>? emp = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+        emp = await empSer.getEmps();
+    }
+
+    private async Task delete(int id)
+    {
+        var result = await Swal.FireAsync(new SweetAlertOptions
+        {
+            Title = "ELIMAR REGISTRO",
+            Text = "¿Desea eliminar ese empleado?",
+            Icon = SweetAlertIcon.Question,
+            ShowCancelButton = true
+        });
+
+        if (result.IsConfirmed)
+        {
+            var eli = await empSer.delDep(id);
+
+            if (eli)
+            {
+                var conf = await Swal.FireAsync(new SweetAlertOptions
+                    {
+                        Title = "OPERACION EXITOSA",
+                        Text = "Registro Eliminado",
+                        Icon = SweetAlertIcon.Success
+                    });
+                emp = emp!.FindAll(e => e.IdEmpleado != id);
+            }
+        }
+    }
+
+}
